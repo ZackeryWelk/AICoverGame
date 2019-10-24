@@ -10,11 +10,20 @@ public class Player : MonoBehaviour
     public GameObject player;
     public GameObject gun;
     public GameObject cameraHolder;
+    public GameObject cam;
 
     //cover
     public float coverRunRange;
     bool inCover;
     NavMeshAgent agent;
+
+    //aiming
+    bool aiming;
+    public Transform normalCamPos;
+    public Transform AimCamPos;
+    private float lerpInProgress = 0;
+    private float lerpOutProgress = 0;
+    public float lerpSpeed = 5;
 
 
     //camera looking stuff
@@ -62,6 +71,7 @@ public class Player : MonoBehaviour
     }
     void playerControls()
     {
+        //movement
         if (Input.GetKey(KeyCode.W))
         {
             transform.position += transform.forward * moveSpeed * Time.deltaTime;
@@ -80,6 +90,8 @@ public class Player : MonoBehaviour
             transform.position += transform.right * moveSpeed * Time.deltaTime;
         }
 
+
+
         //cover
         RaycastHit hit;
         if (Input.GetKey(KeyCode.Q))
@@ -91,12 +103,73 @@ public class Player : MonoBehaviour
                     agent.enabled = true;
                     agent.destination = hit.transform.position;
                     inCover = true;
-
+                    
                     //head to cover
                 }
             }
         }
 
+        //aiming stuff
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            lerpOutProgress = 0;
+            aiming = true;
+            if (lerpInProgress < 1)
+            {
+                lerpInProgress += Time.deltaTime * lerpSpeed;
+                cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
+            }
+        }
+        else
+        {
+            lerpInProgress = 0;
+            aiming = false;
+            if (lerpOutProgress < 1)
+            {
+                lerpOutProgress += Time.deltaTime * lerpSpeed;
+                cam.transform.position = Vector3.Lerp(AimCamPos.position, normalCamPos.position, lerpOutProgress);
+            }
+        }
+
+        //free camera looking stuff
+
+        //Gets rotational input from the mouse
+        rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+        rotationX += Input.GetAxis("Mouse X") * sensitivityX;
+
+        //Clamp the rotation average to be within a specific value range
+        rotationY = ClampAngle(rotationY, minimumY, maximumY);
+        rotationX = ClampAngle(rotationX, minimumX, maximumX);
+
+        //Get the rotation you will be at next as a Quaternion
+        Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, Vector3.left);
+        Quaternion xQuaternion = Quaternion.AngleAxis(rotationX, Vector3.up);
+
+        //if (!aiming)
+        //{
+            //Rotate
+            cameraHolder.transform.rotation = originalRotation * xQuaternion * yQuaternion;
+            //turns the player
+            player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
+        //}
+    }
+
+    void playerCoverControls()
+    {
+        if (Input.GetKey(KeyCode.S))
+        {
+            agent.enabled = false;
+            inCover = false;
+        }
+
+        if (Input.GetKey(KeyCode.A))
+        {
+            transform.position += -transform.right * moveSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            transform.position += transform.right * moveSpeed * Time.deltaTime;
+        }
 
 
         //camera looking stuff
@@ -115,17 +188,6 @@ public class Player : MonoBehaviour
 
         //Rotate
         cameraHolder.transform.rotation = originalRotation * xQuaternion * yQuaternion;
-        //player.transform.localRotation = Quaternion.Euler(0, cameraHolder.transform.localRotation.y, 0);
-        player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0,cameraHolder.transform.forward.z);
-    }
-
-    void playerCoverControls()
-    {
-        if (Input.GetKey(KeyCode.S))
-        {
-            agent.enabled = false;
-            inCover = false;
-        }
     }
 
     void checkIfOnGround()
