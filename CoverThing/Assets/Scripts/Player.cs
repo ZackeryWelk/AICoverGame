@@ -9,6 +9,8 @@ public class Player : MonoBehaviour
     public int moveSpeed;
     public GameObject player;
     public GameObject gun;
+    public GameObject bulletSpawn;
+    public GameObject bullet;
     public GameObject cameraHolder;
     public GameObject cam;
 
@@ -24,6 +26,9 @@ public class Player : MonoBehaviour
     private float lerpInProgress = 0;
     private float lerpOutProgress = 0;
     public float lerpSpeed = 5;
+
+    //shooting
+    private float fireRate = 1.5f; 
 
 
     //camera looking stuff
@@ -131,6 +136,16 @@ public class Player : MonoBehaviour
             }
         }
 
+
+        if(aiming && Input.GetKey(KeyCode.Mouse0))
+        {
+            if (fireRate < 0)
+            {
+                //Instantiate();
+                fireRate = 1.5f;
+            }
+        }
+        fireRate -= Time.deltaTime;
         //free camera looking stuff
 
         //Gets rotational input from the mouse
