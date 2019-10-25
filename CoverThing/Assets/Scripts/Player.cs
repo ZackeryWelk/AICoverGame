@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -10,7 +11,6 @@ public class Player : MonoBehaviour
     public GameObject player;
     public GameObject gun;
     public GameObject bulletSpawn;
-    public GameObject bullet;
     public GameObject cameraHolder;
     public GameObject cam;
 
@@ -28,7 +28,20 @@ public class Player : MonoBehaviour
     public float lerpSpeed = 5;
 
     //shooting
-    private float fireRate = 1.5f; 
+    public float fireRate = 0.5f;
+    private float initialFireRate;
+    private Vector3 bulletSpawnPos;
+    public int gunRange;
+    public bool hitEnemy;
+    public GameObject impact;
+    public int ammo;
+    private int currentAmmo;
+    public Text ammoText;
+    public Slider reloadSlider;
+    private float reloadProgress;
+    public float reloadTime;
+    private float originalReloadTime;
+    private bool reloading;
 
 
     //camera looking stuff
@@ -47,15 +60,15 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //Rigidbody rb = GetComponent<Rigidbody>();
-        //if (rb)
-        //    rb.freezeRotation = true;
         originalRotation = transform.localRotation;
 
 
         agent = GetComponent<NavMeshAgent>();
         agent.enabled = false;
 
+        initialFireRate = fireRate;
+        currentAmmo = ammo;
+        originalReloadTime = reloadTime;
     }
 
     // Update is called once per frame
@@ -72,7 +85,7 @@ public class Player : MonoBehaviour
         checkIfOnGround();
         //transform.position +=  Vector3.down * Time.deltaTime;
 
-        
+        ammoText.text = currentAmmo.ToString() + " / " + ammo.ToString();
     }
     void playerControls()
     {
@@ -136,16 +149,53 @@ public class Player : MonoBehaviour
             }
         }
 
+        //shooting
+        bulletSpawnPos = bulletSpawn.transform.position;
 
-        if(aiming && Input.GetKey(KeyCode.Mouse0))
+        if (aiming && Input.GetKey(KeyCode.Mouse0) && currentAmmo > 0 && !reloading)
         {
+            Debug.DrawRay(bulletSpawnPos, bulletSpawn.transform.forward, Color.red, gunRange);
+
             if (fireRate < 0)
             {
-                //Instantiate();
-                fireRate = 1.5f;
+                RaycastHit gunHit;
+                if(Physics.Raycast(bulletSpawnPos,bulletSpawn.transform.forward,out gunHit, gunRange))
+                {
+                    if(gunHit.transform.tag == "Enemy")
+                    {
+                        
+                        hitEnemy = true;
+                    }
+                    else
+                    {
+                        Instantiate(impact, gunHit.point, Quaternion.Euler(gunHit.normal));
+                    }
+                }
+                fireRate = initialFireRate;
+                currentAmmo--;
             }
         }
         fireRate -= Time.deltaTime;
+
+        if(Input.GetKey(KeyCode.R))
+        {
+            reloading = true;
+        }
+        if(reloading)
+        {
+            reloadTime -= Time.deltaTime;
+            reloadProgress = 1 - (reloadTime/originalReloadTime);
+            reloadSlider.value = reloadProgress;
+
+            if (reloadTime < 0)
+            {
+                currentAmmo = ammo;
+                reloadTime = originalReloadTime;
+                reloading = false;
+                reloadSlider.value = 0;
+            }
+        }
+
         //free camera looking stuff
 
         //Gets rotational input from the mouse
@@ -166,6 +216,7 @@ public class Player : MonoBehaviour
             cameraHolder.transform.rotation = originalRotation * xQuaternion * yQuaternion;
             //turns the player
             player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
+        bulletSpawn.transform.forward = new Vector3(cameraHolder.transform.forward.x, cameraHolder.transform.forward.y, cameraHolder.transform.forward.z);
         //}
     }
 
