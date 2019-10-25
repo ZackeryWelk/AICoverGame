@@ -1230,6 +1230,17 @@ PrefabInstance:
       propertyPath: lerpSpeed
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 7981168521663056025, guid: a104c32cc6c3cdb48a33dc83eca6181b,
+        type: 3}
+      propertyPath: inCoverRange
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7981168521663056025, guid: a104c32cc6c3cdb48a33dc83eca6181b,
+        type: 3}
+      propertyPath: laserSightObj
+      value: 
+      objectReference: {fileID: 1038718715740870450, guid: 73875a2b2ac07874c9822379b87a1281,
+        type: 3}
     - target: {fileID: 8729667643443273691, guid: a104c32cc6c3cdb48a33dc83eca6181b,
         type: 3}
       propertyPath: m_LocalPosition.z

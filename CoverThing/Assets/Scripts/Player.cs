@@ -16,8 +16,10 @@ public class Player : MonoBehaviour
 
     //cover
     public float coverRunRange;
+    public float inCoverRange;
     bool inCover;
     NavMeshAgent agent;
+    private Vector3 savedCoverPos;
 
     //aiming
     bool aiming;
@@ -26,6 +28,7 @@ public class Player : MonoBehaviour
     private float lerpInProgress = 0;
     private float lerpOutProgress = 0;
     public float lerpSpeed = 5;
+    public GameObject laserSightObj;
 
     //shooting
     public float fireRate = 0.5f;
@@ -120,12 +123,18 @@ public class Player : MonoBehaviour
                 {
                     agent.enabled = true;
                     agent.destination = hit.transform.position;
-                    inCover = true;
-                    
                     //head to cover
                 }
             }
         }
+        if (agent.enabled)
+        {
+            if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
+            {
+                inCover = true;
+            }
+        }
+
 
         //aiming stuff
         if (Input.GetKey(KeyCode.Mouse1))
@@ -136,6 +145,11 @@ public class Player : MonoBehaviour
             {
                 lerpInProgress += Time.deltaTime * lerpSpeed;
                 cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
+            }
+            RaycastHit laserSight;
+            if(Physics.Raycast(bulletSpawnPos, bulletSpawn.transform.forward, out laserSight, gunRange))
+            {
+                Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
             }
         }
         else
@@ -227,16 +241,70 @@ public class Player : MonoBehaviour
             agent.enabled = false;
             inCover = false;
         }
-
-        if (Input.GetKey(KeyCode.A))
+        if (!aiming)
         {
-            transform.position += -transform.right * moveSpeed * Time.deltaTime;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            transform.position += transform.right * moveSpeed * Time.deltaTime;
+            if (Input.GetKey(KeyCode.A))
+            {
+                transform.position += -transform.right * moveSpeed * Time.deltaTime;
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                transform.position += transform.right * moveSpeed * Time.deltaTime;
+            }
         }
 
+        //aiming stuff
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            agent.isStopped = true;
+            
+            lerpOutProgress = 0;
+            aiming = true;
+            if (lerpInProgress < 1)
+            {
+                lerpInProgress += Time.deltaTime * lerpSpeed;
+                cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
+            }
+            RaycastHit laserSight;
+            if (Physics.Raycast(bulletSpawnPos, bulletSpawn.transform.forward, out laserSight, gunRange))
+            {
+                Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
+            }
+
+            player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
+            bulletSpawn.transform.forward = new Vector3(cameraHolder.transform.forward.x, cameraHolder.transform.forward.y, cameraHolder.transform.forward.z);
+        }
+        else
+        {
+            agent.isStopped = false;
+
+            lerpInProgress = 0;
+            aiming = false;
+            if (lerpOutProgress < 1)
+            {
+                lerpOutProgress += Time.deltaTime * lerpSpeed;
+                cam.transform.position = Vector3.Lerp(AimCamPos.position, normalCamPos.position, lerpOutProgress);
+            }
+        }
+
+        if (Input.GetKey(KeyCode.R))
+        {
+            reloading = true;
+        }
+        if (reloading)
+        {
+            reloadTime -= Time.deltaTime;
+            reloadProgress = 1 - (reloadTime / originalReloadTime);
+            reloadSlider.value = reloadProgress;
+
+            if (reloadTime < 0)
+            {
+                currentAmmo = ammo;
+                reloadTime = originalReloadTime;
+                reloading = false;
+                reloadSlider.value = 0;
+            }
+        }
 
         //camera looking stuff
 
