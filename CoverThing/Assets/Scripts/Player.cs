@@ -20,6 +20,10 @@ public class Player : MonoBehaviour
     bool inCover;
     NavMeshAgent agent;
     private Vector3 savedCoverPos;
+    public GameObject currentCover;
+    private Vector3 lookDirection;
+    public GameObject leftPoint;
+    public GameObject rightPoint;
 
     //aiming
     bool aiming;
@@ -33,7 +37,6 @@ public class Player : MonoBehaviour
     //shooting
     public float fireRate = 0.5f;
     private float initialFireRate;
-    private Vector3 bulletSpawnPos;
     public int gunRange;
     public bool hitEnemy;
     public GameObject impact;
@@ -92,6 +95,8 @@ public class Player : MonoBehaviour
     }
     void playerControls()
     {
+        fireRate -= Time.deltaTime;
+
         //movement
         if (Input.GetKey(KeyCode.W))
         {
@@ -121,6 +126,8 @@ public class Player : MonoBehaviour
             {
                 if (hit.transform.tag == "Cover")
                 {
+                    lookDirection = hit.normal;
+                    currentCover = hit.transform.gameObject;
                     agent.enabled = true;
                     agent.destination = hit.transform.position;
                     //head to cover
@@ -147,7 +154,7 @@ public class Player : MonoBehaviour
                 cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
             }
             RaycastHit laserSight;
-            if(Physics.Raycast(bulletSpawnPos, bulletSpawn.transform.forward, out laserSight, gunRange))
+            if(Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
             {
                 Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
             }
@@ -164,16 +171,15 @@ public class Player : MonoBehaviour
         }
 
         //shooting
-        bulletSpawnPos = bulletSpawn.transform.position;
 
         if (aiming && Input.GetKey(KeyCode.Mouse0) && currentAmmo > 0 && !reloading)
         {
-            Debug.DrawRay(bulletSpawnPos, bulletSpawn.transform.forward, Color.red, gunRange);
+            Debug.DrawRay(bulletSpawn.transform.position, bulletSpawn.transform.forward, Color.red, gunRange);
 
             if (fireRate < 0)
             {
                 RaycastHit gunHit;
-                if(Physics.Raycast(bulletSpawnPos,bulletSpawn.transform.forward,out gunHit, gunRange))
+                if(Physics.Raycast(bulletSpawn.transform.position,bulletSpawn.transform.forward,out gunHit, gunRange))
                 {
                     if(gunHit.transform.tag == "Enemy")
                     {
@@ -189,7 +195,6 @@ public class Player : MonoBehaviour
                 currentAmmo--;
             }
         }
-        fireRate -= Time.deltaTime;
 
         if(Input.GetKey(KeyCode.R))
         {
@@ -236,27 +241,52 @@ public class Player : MonoBehaviour
 
     void playerCoverControls()
     {
+
+        fireRate -= Time.deltaTime;
+
+        if (agent.enabled)
+        {
+            if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
+            {
+                inCover = true;
+                agent.enabled = false;
+            }
+        }
+        
+        //backs out of cover
         if (Input.GetKey(KeyCode.S))
         {
-            agent.enabled = false;
             inCover = false;
         }
+        //moving in cover(limits you so you cant walk sideways out of cover 
         if (!aiming)
         {
-            if (Input.GetKey(KeyCode.A))
+
+            //look direction makes player look into cover
+            transform.forward = -lookDirection;
+            RaycastHit leftHit;
+           if(Physics.Raycast(leftPoint.transform.position,leftPoint.transform.forward,out leftHit,Mathf.Infinity))
+                {
+                if(leftHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.A))
+                    {
+                    transform.position += -transform.right * moveSpeed * Time.deltaTime;
+                    }
+                }
+            RaycastHit rightHit;
+            if (Physics.Raycast(rightPoint.transform.position, rightPoint.transform.forward, out rightHit, Mathf.Infinity))
             {
-                transform.position += -transform.right * moveSpeed * Time.deltaTime;
+                if (rightHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.D))
+                {
+                    transform.position += transform.right * moveSpeed * Time.deltaTime;
+                }
             }
-            if (Input.GetKey(KeyCode.D))
-            {
-                transform.position += transform.right * moveSpeed * Time.deltaTime;
-            }
+
         }
 
         //aiming stuff
         if (Input.GetKey(KeyCode.Mouse1))
         {
-            agent.isStopped = true;
+            //agent.isStopped = true;
             
             lerpOutProgress = 0;
             aiming = true;
@@ -266,17 +296,41 @@ public class Player : MonoBehaviour
                 cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
             }
             RaycastHit laserSight;
-            if (Physics.Raycast(bulletSpawnPos, bulletSpawn.transform.forward, out laserSight, gunRange))
+            if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
             {
                 Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
             }
 
             player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
             bulletSpawn.transform.forward = new Vector3(cameraHolder.transform.forward.x, cameraHolder.transform.forward.y, cameraHolder.transform.forward.z);
+
+            RaycastHit hit;
+            if (Input.GetKey(KeyCode.Q))
+            {
+                if (Physics.Raycast(transform.position, transform.forward, out hit, coverRunRange))
+                {
+                    if (hit.transform.tag == "Cover")
+                    {
+                        lookDirection = hit.normal;
+                        currentCover = hit.transform.gameObject;
+                        agent.enabled = true;
+                        agent.destination = hit.transform.position;
+                        //head to cover
+                    }
+                }
+            }
+            RaycastHit particleHit;
+            if (Physics.Raycast(transform.position, transform.forward, out particleHit, coverRunRange))
+            {
+                if (particleHit.transform.tag == "Cover" && particleHit.transform.gameObject != currentCover)
+                {
+                    particleHit.transform.gameObject.GetComponent<ParticleSystem>().Play();
+                }
+            }
         }
         else
         {
-            agent.isStopped = false;
+            //agent.isStopped = false;
 
             lerpInProgress = 0;
             aiming = false;
@@ -284,6 +338,31 @@ public class Player : MonoBehaviour
             {
                 lerpOutProgress += Time.deltaTime * lerpSpeed;
                 cam.transform.position = Vector3.Lerp(AimCamPos.position, normalCamPos.position, lerpOutProgress);
+            }
+        }
+
+        //shooting
+        if (aiming && Input.GetKey(KeyCode.Mouse0) && currentAmmo > 0 && !reloading)
+        {
+            Debug.DrawRay(bulletSpawn.transform.position, bulletSpawn.transform.forward, Color.red, gunRange);
+
+            if (fireRate < 0)
+            {
+                RaycastHit gunHit;
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out gunHit, gunRange))
+                {
+                    if (gunHit.transform.tag == "Enemy")
+                    {
+
+                        hitEnemy = true;
+                    }
+                    else
+                    {
+                        Instantiate(impact, gunHit.point, Quaternion.Euler(gunHit.normal));
+                    }
+                }
+                fireRate = initialFireRate;
+                currentAmmo--;
             }
         }
 
