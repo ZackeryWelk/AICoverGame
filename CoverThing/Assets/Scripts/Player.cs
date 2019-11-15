@@ -151,7 +151,7 @@ public class Player : MonoBehaviour
             if (lerpInProgress < 1)
             {
                 lerpInProgress += Time.deltaTime * lerpSpeed;
-                cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, AimCamPos.position, lerpInProgress);
             }
             RaycastHit laserSight;
             if(Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
@@ -166,7 +166,7 @@ public class Player : MonoBehaviour
             if (lerpOutProgress < 1)
             {
                 lerpOutProgress += Time.deltaTime * lerpSpeed;
-                cam.transform.position = Vector3.Lerp(AimCamPos.position, normalCamPos.position, lerpOutProgress);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, normalCamPos.position, lerpOutProgress);
             }
         }
 
@@ -293,7 +293,7 @@ public class Player : MonoBehaviour
             if (lerpInProgress < 1)
             {
                 lerpInProgress += Time.deltaTime * lerpSpeed;
-                cam.transform.position = Vector3.Lerp(normalCamPos.position, AimCamPos.position, lerpInProgress);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, AimCamPos.position, lerpInProgress);
             }
             RaycastHit laserSight;
             if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
@@ -337,7 +337,7 @@ public class Player : MonoBehaviour
             if (lerpOutProgress < 1)
             {
                 lerpOutProgress += Time.deltaTime * lerpSpeed;
-                cam.transform.position = Vector3.Lerp(AimCamPos.position, normalCamPos.position, lerpOutProgress);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, normalCamPos.position, lerpOutProgress);
             }
         }
 
