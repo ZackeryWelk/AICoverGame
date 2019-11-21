@@ -24,6 +24,15 @@ public class Player : MonoBehaviour
     private Vector3 lookDirection;
     public GameObject leftPoint;
     public GameObject rightPoint;
+    public Transform coverCamPos;
+    private float coverLerpIn;
+    private float coverLerpOut;
+    private float coverLerpSpeed = 5;
+
+    //left peek
+    
+    //right peek
+
 
     //aiming
     bool aiming;
@@ -96,6 +105,16 @@ public class Player : MonoBehaviour
     void playerControls()
     {
         fireRate -= Time.deltaTime;
+
+        if(!aiming)
+        {
+            coverLerpIn = 0;
+            if (coverLerpOut < 1)
+            {
+                coverLerpOut += Time.deltaTime * coverLerpSpeed;
+                cam.transform.position = Vector3.Lerp(cam.transform.position, normalCamPos.position, coverLerpOut);
+            }
+        }
 
         //movement
         if (Input.GetKey(KeyCode.W))
@@ -244,6 +263,13 @@ public class Player : MonoBehaviour
 
         fireRate -= Time.deltaTime;
 
+        coverLerpOut = 0;
+        if (coverLerpIn < 1)
+        {
+            coverLerpIn += Time.deltaTime * coverLerpSpeed;
+            cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, coverLerpIn);
+        }
+
         if (agent.enabled)
         {
             if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
@@ -252,6 +278,7 @@ public class Player : MonoBehaviour
                 agent.enabled = false;
             }
         }
+        
         
         //backs out of cover
         if (Input.GetKey(KeyCode.S))
@@ -307,7 +334,7 @@ public class Player : MonoBehaviour
             RaycastHit hit;
             if (Input.GetKey(KeyCode.Q))
             {
-                if (Physics.Raycast(transform.position, transform.forward, out hit, coverRunRange))
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out hit, coverRunRange))
                 {
                     if (hit.transform.tag == "Cover")
                     {
@@ -320,7 +347,7 @@ public class Player : MonoBehaviour
                 }
             }
             RaycastHit particleHit;
-            if (Physics.Raycast(transform.position, transform.forward, out particleHit, coverRunRange))
+            if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out particleHit, coverRunRange))
             {
                 if (particleHit.transform.tag == "Cover" && particleHit.transform.gameObject != currentCover)
                 {
@@ -337,7 +364,7 @@ public class Player : MonoBehaviour
             if (lerpOutProgress < 1)
             {
                 lerpOutProgress += Time.deltaTime * lerpSpeed;
-                cam.transform.position = Vector3.Lerp(cam.transform.position, normalCamPos.position, lerpOutProgress);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, lerpOutProgress);
             }
         }
 

@@ -1021,6 +1021,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: da38322035443a74498a00416b6316c0, type: 3}
+--- !u!4 &1558912528 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7422563186455331160, guid: a104c32cc6c3cdb48a33dc83eca6181b,
+    type: 3}
+  m_PrefabInstance: {fileID: 7981168521994462204}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1656722351 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1215165909225241275, guid: da38322035443a74498a00416b6316c0,
@@ -1554,5 +1560,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7981168521663056025, guid: a104c32cc6c3cdb48a33dc83eca6181b,
+        type: 3}
+      propertyPath: coverCamPos
+      value: 
+      objectReference: {fileID: 1558912528}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a104c32cc6c3cdb48a33dc83eca6181b, type: 3}
