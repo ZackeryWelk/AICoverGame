@@ -750,7 +750,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3812018060603189858}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1, y: 1.189, z: -1.271}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 7981168523238452811}
@@ -1063,6 +1063,9 @@ MonoBehaviour:
   currentCover: {fileID: 0}
   leftPoint: {fileID: 1550648804}
   rightPoint: {fileID: 1979336544}
+  coverCamPos: {fileID: 7422563186455331160}
+  leftPeekCamPos: {fileID: 1185795554425982097}
+  rightPeekCamPos: {fileID: 2104490726108940505}
   normalCamPos: {fileID: 7981168521709698277}
   AimCamPos: {fileID: 7981168523037686230}
   lerpSpeed: 3
@@ -1433,7 +1436,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8412057711414294242}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1, y: 1.189, z: -1.271}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 7981168523238452811}

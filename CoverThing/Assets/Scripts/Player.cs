@@ -18,6 +18,8 @@ public class Player : MonoBehaviour
     public float coverRunRange;
     public float inCoverRange;
     bool inCover;
+    bool inHighCover;
+    bool inLowCover;
     NavMeshAgent agent;
     private Vector3 savedCoverPos;
     public GameObject currentCover;
@@ -29,10 +31,19 @@ public class Player : MonoBehaviour
     private float coverLerpOut;
     private float coverLerpSpeed = 5;
 
-    //left peek
-    
-    //right peek
 
+    private float peekOutTimer = 1;
+    private float peekInTimer = 1;
+    private Vector3 temp;
+    //left peek
+    RaycastHit leftHit;
+    bool leftEdge;
+    public Transform leftPeekCamPos;
+
+    //right peek
+    RaycastHit rightHit;
+    bool rightEdge;
+    public Transform rightPeekCamPos;
 
     //aiming
     bool aiming;
@@ -72,6 +83,11 @@ public class Player : MonoBehaviour
     Quaternion originalRotation;
 
 
+    //animation
+    public Animator animator;
+
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -93,9 +109,13 @@ public class Player : MonoBehaviour
         {
             playerControls();
         }
-        if(inCover)
+        if(inLowCover)
         {
-            playerCoverControls();
+            playerLowCoverControls();
+        }
+        if(inHighCover)
+        {
+            playerHighCoverControls();
         }
         checkIfOnGround();
         //transform.position +=  Vector3.down * Time.deltaTime;
@@ -157,6 +177,14 @@ public class Player : MonoBehaviour
         {
             if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
             {
+                if(currentCover.transform.name == "LowCover")
+                {
+                    inLowCover = true;
+                }
+                else if(currentCover.transform.name == "HighCover")
+                {
+                    inHighCover = true;
+                }
                 inCover = true;
             }
         }
@@ -258,7 +286,338 @@ public class Player : MonoBehaviour
         //}
     }
 
-    void playerCoverControls()
+    void playerLowCoverControls()
+    {
+        animator.rootRotation = Quaternion.Euler(90, 90, 90);
+        fireRate -= Time.deltaTime;
+
+        coverLerpOut = 0;
+        if (coverLerpIn < 1)
+        {
+            coverLerpIn += Time.deltaTime * coverLerpSpeed;
+            cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, coverLerpIn);
+        }
+
+        if (agent.enabled)
+        {
+            if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
+            {
+                inLowCover = true;
+                agent.enabled = false;
+            }
+        }
+        
+        
+        //backs out of cover
+        if (Input.GetKey(KeyCode.S))
+        {
+            inCover = false;
+            inLowCover = false;
+        }
+        //moving in cover(limits you so you cant walk sideways out of cover 
+        if (!aiming)
+        {
+
+            //look direction makes player look into cover
+            transform.forward = -lookDirection;
+            //RaycastHit leftHit;
+           if(Physics.Raycast(leftPoint.transform.position,leftPoint.transform.forward,out leftHit,Mathf.Infinity))
+           {
+                if(leftHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.A))
+                {
+                    transform.position += -transform.right * moveSpeed * Time.deltaTime;
+                    leftEdge = false;
+                }
+                else if(leftHit.transform.gameObject != currentCover)
+                {
+                    leftEdge = true;
+                }
+                else
+                {
+                    leftEdge = false;
+                }
+           }
+            //RaycastHit rightHit;
+           if (Physics.Raycast(rightPoint.transform.position, rightPoint.transform.forward, out rightHit, Mathf.Infinity))
+           {
+               if (rightHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.D))
+               {
+                   transform.position += transform.right * moveSpeed * Time.deltaTime;
+                   rightEdge = false;
+               }
+               else if(rightHit.transform.gameObject != currentCover)
+               {
+                   rightEdge = true;
+               }
+               else
+               {
+                   rightEdge = false;
+               }
+           }
+
+        }
+
+        //aiming out of left side of cover
+        if (leftEdge)
+        {
+            if (Input.GetKey(KeyCode.Mouse1))
+            {
+                peekOutTimer -= Time.deltaTime;
+                peekInTimer = 1;
+                //agent.isStopped = true;
+
+                lerpOutProgress = 0;
+                aiming = true;
+                if (lerpInProgress < 1)
+                {
+                    lerpInProgress += Time.deltaTime * lerpSpeed;
+                    cam.transform.position = Vector3.Lerp(cam.transform.position, leftPeekCamPos.position, lerpInProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(0).position, lerpInProgress);
+                }
+                RaycastHit laserSight;
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
+                {
+                    Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
+                }
+
+                player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
+                bulletSpawn.transform.forward = new Vector3(cameraHolder.transform.forward.x, cameraHolder.transform.forward.y, cameraHolder.transform.forward.z);
+
+                RaycastHit hit;
+                if (Input.GetKey(KeyCode.Q))
+                {
+                    if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out hit, coverRunRange))
+                    {
+                        if (hit.transform.tag == "Cover")
+                        {
+                            lookDirection = hit.normal;
+                            currentCover = hit.transform.gameObject;
+                            agent.enabled = true;
+                            agent.destination = hit.transform.position;
+                            //head to cover
+                        }
+                    }
+                }
+                RaycastHit particleHit;
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out particleHit, coverRunRange))
+                {
+                    if (particleHit.transform.tag == "Cover" && particleHit.transform.gameObject != currentCover)
+                    {
+                        particleHit.transform.gameObject.GetComponent<ParticleSystem>().Play();
+                    }
+                }
+            }
+            else
+            {
+                //agent.isStopped = false;
+                peekInTimer -= Time.deltaTime;
+                peekOutTimer = 1;
+                lerpInProgress = 0;
+                //aiming = false;
+                if (lerpOutProgress < 1)
+                {
+                    lerpOutProgress += Time.deltaTime * lerpSpeed;
+                    cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, lerpOutProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(2).position, lerpOutProgress);
+
+                }
+                if (lerpOutProgress >= 0.99f)
+                {
+                    aiming = false;
+                }
+            }
+        }
+
+        //aiming out of right side of cover
+        if (rightEdge)
+        {
+            if (Input.GetKey(KeyCode.Mouse1))
+            {
+
+                //agent.isStopped = true;
+
+                lerpOutProgress = 0;
+                aiming = true;
+                if (lerpInProgress < 1)
+                {
+                    lerpInProgress += Time.deltaTime * lerpSpeed;
+                    cam.transform.position = Vector3.Lerp(cam.transform.position, rightPeekCamPos.position, lerpInProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(1).position, lerpInProgress);
+                }
+                RaycastHit laserSight;
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
+                {
+                    Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
+                }
+
+                player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
+                bulletSpawn.transform.forward = new Vector3(cameraHolder.transform.forward.x, cameraHolder.transform.forward.y, cameraHolder.transform.forward.z);
+
+                RaycastHit hit;
+                if (Input.GetKey(KeyCode.Q))
+                {
+                    if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out hit, coverRunRange))
+                    {
+                        if (hit.transform.tag == "Cover")
+                        {
+                            lookDirection = hit.normal;
+                            currentCover = hit.transform.gameObject;
+                            agent.enabled = true;
+                            agent.destination = hit.transform.position;
+                            //head to cover
+                        }
+                    }
+                }
+                RaycastHit particleHit;
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out particleHit, coverRunRange))
+                {
+                    if (particleHit.transform.tag == "Cover" && particleHit.transform.gameObject != currentCover)
+                    {
+                        particleHit.transform.gameObject.GetComponent<ParticleSystem>().Play();
+                    }
+                }
+            }
+            else
+            {
+                //agent.isStopped = false;
+
+                lerpInProgress = 0;
+                aiming = false;
+                if (lerpOutProgress < 1)
+                {
+                    lerpOutProgress += Time.deltaTime * lerpSpeed;
+                    cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, lerpOutProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(3).position, lerpOutProgress);
+                }
+                if (lerpOutProgress >= 0.99f)
+                {
+                    aiming = false;
+                }
+
+            }
+        }
+
+        //aiming stuff
+        if (Input.GetKey(KeyCode.Mouse1) && !leftEdge && !rightEdge)
+        {
+            //agent.isStopped = true;
+            
+            lerpOutProgress = 0;
+            aiming = true;
+            if (lerpInProgress < 1)
+            {
+                lerpInProgress += Time.deltaTime * lerpSpeed;
+                cam.transform.position = Vector3.Lerp(cam.transform.position, AimCamPos.position, lerpInProgress);
+            }
+            RaycastHit laserSight;
+            if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
+            {
+                Instantiate(laserSightObj, laserSight.point, Quaternion.Euler(laserSight.normal));
+            }
+
+            player.transform.forward = new Vector3(cameraHolder.transform.forward.x, 0, cameraHolder.transform.forward.z);
+            bulletSpawn.transform.forward = new Vector3(cameraHolder.transform.forward.x, cameraHolder.transform.forward.y, cameraHolder.transform.forward.z);
+
+            RaycastHit hit;
+            if (Input.GetKey(KeyCode.Q))
+            {
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out hit, coverRunRange))
+                {
+                    if (hit.transform.tag == "Cover")
+                    {
+                        lookDirection = hit.normal;
+                        currentCover = hit.transform.gameObject;
+                        agent.enabled = true;
+                        agent.destination = hit.transform.position;
+                        //head to cover
+                    }
+                }
+            }
+            RaycastHit particleHit;
+            if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out particleHit, coverRunRange))
+            {
+                if (particleHit.transform.tag == "Cover" && particleHit.transform.gameObject != currentCover)
+                {
+                    particleHit.transform.gameObject.GetComponent<ParticleSystem>().Play();
+                }
+            }
+        }
+        else if(!leftEdge && !rightEdge)
+        {
+            //agent.isStopped = false;
+
+            lerpInProgress = 0;
+            aiming = false;
+            if (lerpOutProgress < 1)
+            {
+                lerpOutProgress += Time.deltaTime * lerpSpeed;
+                cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, lerpOutProgress);
+            }
+        }
+
+        //shooting
+        if (aiming && Input.GetKey(KeyCode.Mouse0) && currentAmmo > 0 && !reloading)
+        {
+            Debug.DrawRay(bulletSpawn.transform.position, bulletSpawn.transform.forward, Color.red, gunRange);
+
+            if (fireRate < 0)
+            {
+                RaycastHit gunHit;
+                if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out gunHit, gunRange))
+                {
+                    if (gunHit.transform.tag == "Enemy")
+                    {
+
+                        hitEnemy = true;
+                    }
+                    else
+                    {
+                        Instantiate(impact, gunHit.point, Quaternion.Euler(gunHit.normal));
+                    }
+                }
+                fireRate = initialFireRate;
+                currentAmmo--;
+            }
+        }
+
+        if (Input.GetKey(KeyCode.R))
+        {
+            reloading = true;
+        }
+        if (reloading)
+        {
+            reloadTime -= Time.deltaTime;
+            reloadProgress = 1 - (reloadTime / originalReloadTime);
+            reloadSlider.value = reloadProgress;
+
+            if (reloadTime < 0)
+            {
+                currentAmmo = ammo;
+                reloadTime = originalReloadTime;
+                reloading = false;
+                reloadSlider.value = 0;
+            }
+        }
+
+        //camera looking stuff
+
+        //Gets rotational input from the mouse
+        rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+        rotationX += Input.GetAxis("Mouse X") * sensitivityX;
+
+        //Clamp the rotation average to be within a specific value range
+        rotationY = ClampAngle(rotationY, minimumY, maximumY);
+        rotationX = ClampAngle(rotationX, minimumX, maximumX);
+
+        //Get the rotation you will be at next as a Quaternion
+        Quaternion yQuaternion = Quaternion.AngleAxis(rotationY, Vector3.left);
+        Quaternion xQuaternion = Quaternion.AngleAxis(rotationX, Vector3.up);
+
+        //Rotate
+        cameraHolder.transform.rotation = originalRotation * xQuaternion * yQuaternion;
+    }
+
+    void playerHighCoverControls()
     {
 
         fireRate -= Time.deltaTime;
@@ -274,15 +633,16 @@ public class Player : MonoBehaviour
         {
             if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
             {
-                inCover = true;
+                inHighCover = true;
                 agent.enabled = false;
             }
         }
-        
-        
+
+
         //backs out of cover
         if (Input.GetKey(KeyCode.S))
         {
+            inHighCover = false;
             inCover = false;
         }
         //moving in cover(limits you so you cant walk sideways out of cover 
@@ -291,15 +651,15 @@ public class Player : MonoBehaviour
 
             //look direction makes player look into cover
             transform.forward = -lookDirection;
-            RaycastHit leftHit;
-           if(Physics.Raycast(leftPoint.transform.position,leftPoint.transform.forward,out leftHit,Mathf.Infinity))
+            //RaycastHit leftHit;
+            if (Physics.Raycast(leftPoint.transform.position, leftPoint.transform.forward, out leftHit, Mathf.Infinity))
+            {
+                if (leftHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.A))
                 {
-                if(leftHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.A))
-                    {
                     transform.position += -transform.right * moveSpeed * Time.deltaTime;
-                    }
                 }
-            RaycastHit rightHit;
+            }
+            //RaycastHit rightHit;
             if (Physics.Raycast(rightPoint.transform.position, rightPoint.transform.forward, out rightHit, Mathf.Infinity))
             {
                 if (rightHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.D))
@@ -314,7 +674,7 @@ public class Player : MonoBehaviour
         if (Input.GetKey(KeyCode.Mouse1))
         {
             //agent.isStopped = true;
-            
+
             lerpOutProgress = 0;
             aiming = true;
             if (lerpInProgress < 1)
