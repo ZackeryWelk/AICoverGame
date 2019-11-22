@@ -288,7 +288,6 @@ public class Player : MonoBehaviour
 
     void playerLowCoverControls()
     {
-        animator.rootRotation = Quaternion.Euler(90, 90, 90);
         fireRate -= Time.deltaTime;
 
         coverLerpOut = 0;
@@ -300,8 +299,10 @@ public class Player : MonoBehaviour
 
         if (agent.enabled)
         {
+
             if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
             {
+                animator.SetTrigger("enterLowCover");
                 inLowCover = true;
                 agent.enabled = false;
             }
@@ -311,6 +312,7 @@ public class Player : MonoBehaviour
         //backs out of cover
         if (Input.GetKey(KeyCode.S))
         {
+            animator.SetTrigger("exitLowCover");
             inCover = false;
             inLowCover = false;
         }
@@ -319,39 +321,45 @@ public class Player : MonoBehaviour
         {
 
             //look direction makes player look into cover
-            transform.forward = -lookDirection;
-            //RaycastHit leftHit;
-           if(Physics.Raycast(leftPoint.transform.position,leftPoint.transform.forward,out leftHit,Mathf.Infinity))
+            transform.forward = lookDirection;
+            //moving right
+           if(Physics.Raycast(leftPoint.transform.position,-leftPoint.transform.forward,out leftHit,Mathf.Infinity))
            {
-                if(leftHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.A))
+                if(leftHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.D))
                 {
+                    animator.SetBool("lowCoverLeft", true);
                     transform.position += -transform.right * moveSpeed * Time.deltaTime;
                     leftEdge = false;
                 }
                 else if(leftHit.transform.gameObject != currentCover)
                 {
+                    animator.SetBool("lowCoverLeft", false);
                     leftEdge = true;
                 }
                 else
                 {
+                    animator.SetBool("lowCoverLeft", false);
                     leftEdge = false;
                 }
            }
-            //RaycastHit rightHit;
-           if (Physics.Raycast(rightPoint.transform.position, rightPoint.transform.forward, out rightHit, Mathf.Infinity))
+           //moving left
+           if (Physics.Raycast(rightPoint.transform.position, -rightPoint.transform.forward, out rightHit, Mathf.Infinity))
            {
-               if (rightHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.D))
+               if (rightHit.transform.gameObject == currentCover && Input.GetKey(KeyCode.A))
                {
-                   transform.position += transform.right * moveSpeed * Time.deltaTime;
+                    animator.SetBool("lowCoverRight", true);
+                    transform.position += transform.right * moveSpeed * Time.deltaTime;
                    rightEdge = false;
                }
                else if(rightHit.transform.gameObject != currentCover)
                {
-                   rightEdge = true;
+                    animator.SetBool("lowCoverRight", false);
+                    rightEdge = true;
                }
                else
                {
-                   rightEdge = false;
+                    animator.SetBool("lowCoverRight", false);
+                    rightEdge = false;
                }
            }
 
@@ -372,7 +380,7 @@ public class Player : MonoBehaviour
                 {
                     lerpInProgress += Time.deltaTime * lerpSpeed;
                     cam.transform.position = Vector3.Lerp(cam.transform.position, leftPeekCamPos.position, lerpInProgress);
-                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(0).position, lerpInProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(1).position, lerpInProgress);
                 }
                 RaycastHit laserSight;
                 if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
@@ -418,7 +426,7 @@ public class Player : MonoBehaviour
                 {
                     lerpOutProgress += Time.deltaTime * lerpSpeed;
                     cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, lerpOutProgress);
-                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(2).position, lerpOutProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(3).position, lerpOutProgress);
 
                 }
                 if (lerpOutProgress >= 0.99f)
@@ -442,7 +450,7 @@ public class Player : MonoBehaviour
                 {
                     lerpInProgress += Time.deltaTime * lerpSpeed;
                     cam.transform.position = Vector3.Lerp(cam.transform.position, rightPeekCamPos.position, lerpInProgress);
-                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(1).position, lerpInProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(0).position, lerpInProgress);
                 }
                 RaycastHit laserSight;
                 if (Physics.Raycast(bulletSpawn.transform.position, bulletSpawn.transform.forward, out laserSight, gunRange))
@@ -487,7 +495,7 @@ public class Player : MonoBehaviour
                 {
                     lerpOutProgress += Time.deltaTime * lerpSpeed;
                     cam.transform.position = Vector3.Lerp(cam.transform.position, coverCamPos.position, lerpOutProgress);
-                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(3).position, lerpOutProgress);
+                    transform.position = Vector3.Lerp(transform.position, currentCover.transform.GetChild(2).position, lerpOutProgress);
                 }
                 if (lerpOutProgress >= 0.99f)
                 {

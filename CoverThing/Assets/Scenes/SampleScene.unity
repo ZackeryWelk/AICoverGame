@@ -1815,6 +1815,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: xbot
       objectReference: {fileID: 0}
+    - target: {fileID: 3716607874205939391, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
+        type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: fc0d8a6dbae0d844c8408fcf458eacc3, type: 2}
+    - target: {fileID: 3716607874205939391, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
+        type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3716607874212829397, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1870,25 +1880,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3716607874205939391, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
-        type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: fc0d8a6dbae0d844c8408fcf458eacc3, type: 2}
-    - target: {fileID: 3716607874205939391, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
-        type: 3}
-      propertyPath: m_ApplyRootMotion
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3716607875840826957, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
         type: 3}
       propertyPath: animator
       value: 
       objectReference: {fileID: 648620839}
+    - target: {fileID: 3716607875840826957, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
+        type: 3}
+      propertyPath: inCoverRange
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3716607875840826957, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
+        type: 3}
+      propertyPath: inCoverAnimationRange
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 3716607875840826944, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
         type: 3}
       propertyPath: m_BaseOffset
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3716607875840826944, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
+        type: 3}
+      propertyPath: m_Radius
+      value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 3716607874212829527, guid: fe87dc9d318ffbf41b7a6e5f14c19f2e,
         type: 3}
