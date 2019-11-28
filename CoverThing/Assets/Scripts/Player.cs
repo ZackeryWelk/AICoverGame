@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
     public GameObject bulletSpawn;
     public GameObject cameraHolder;
     public GameObject cam;
+    private bool moving;
 
     //cover
     public float coverRunRange;
@@ -139,21 +140,40 @@ public class Player : MonoBehaviour
         //movement
         if (Input.GetKey(KeyCode.W))
         {
+            moving = true;
             transform.position += transform.forward * moveSpeed * Time.deltaTime;
+            if(!aiming)
+                animator.SetBool("running", true);
         }
         if (Input.GetKey(KeyCode.S))
         {
+            moving = true;
             transform.position += -transform.forward * moveSpeed * Time.deltaTime;
             agent.enabled = false;
+            if(!aiming)
+                animator.SetBool("running", true);
         }
         if (Input.GetKey(KeyCode.A))
         {
+            moving = true;
             transform.position += -transform.right * moveSpeed * Time.deltaTime;
+            if(!aiming)
+                animator.SetBool("running", true);
         }
         if (Input.GetKey(KeyCode.D))
         {
+            moving = true;
             transform.position += transform.right * moveSpeed * Time.deltaTime;
+            if(!aiming)
+                animator.SetBool("running", true);
         }
+
+        if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D) && !agent.enabled)
+        {
+            moving = false;
+            animator.SetBool("running", false);
+        }
+        
 
 
 
@@ -169,6 +189,8 @@ public class Player : MonoBehaviour
                     currentCover = hit.transform.gameObject;
                     agent.enabled = true;
                     agent.destination = hit.transform.position;
+                    animator.speed = agent.speed/7;
+                    animator.SetBool("running", true);
                     //head to cover
                 }
             }
@@ -179,10 +201,12 @@ public class Player : MonoBehaviour
             {
                 if(currentCover.transform.name == "LowCover")
                 {
+                    animator.SetBool("running", false);
                     inLowCover = true;
                 }
                 else if(currentCover.transform.name == "HighCover")
                 {
+                    animator.SetBool("running", false);
                     inHighCover = true;
                 }
                 inCover = true;
@@ -193,6 +217,16 @@ public class Player : MonoBehaviour
         //aiming stuff
         if (Input.GetKey(KeyCode.Mouse1))
         {
+            if(moving)
+            {
+                animator.SetBool("aimRunning", true);
+                animator.SetBool("idleAim", false);
+            }
+            else
+            {
+                animator.SetBool("idleAim", true);
+                animator.SetBool("aimRunning", false);
+            }
             lerpOutProgress = 0;
             aiming = true;
             if (lerpInProgress < 1)
@@ -208,6 +242,9 @@ public class Player : MonoBehaviour
         }
         else
         {
+            animator.SetBool("aimRunning", false);
+            animator.SetBool("idleAim", false);
+            
             lerpInProgress = 0;
             aiming = false;
             if (lerpOutProgress < 1)
@@ -302,17 +339,18 @@ public class Player : MonoBehaviour
 
             if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
             {
-                animator.SetTrigger("enterLowCover");
+                animator.Play("lowCoverIdle");
+                
                 inLowCover = true;
                 agent.enabled = false;
             }
         }
-        
-        
+
+
         //backs out of cover
         if (Input.GetKey(KeyCode.S))
         {
-            animator.SetTrigger("exitLowCover");
+            animator.Play("idle");
             inCover = false;
             inLowCover = false;
         }
@@ -370,6 +408,7 @@ public class Player : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.Mouse1))
             {
+                animator.SetBool("emergeRight",true);
                 peekOutTimer -= Time.deltaTime;
                 peekInTimer = 1;
                 //agent.isStopped = true;
@@ -417,6 +456,8 @@ public class Player : MonoBehaviour
             }
             else
             {
+                animator.SetFloat("Direction", -1);
+                animator.SetBool("emergeRight",false);
                 //agent.isStopped = false;
                 peekInTimer -= Time.deltaTime;
                 peekOutTimer = 1;
@@ -441,9 +482,8 @@ public class Player : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.Mouse1))
             {
-
                 //agent.isStopped = true;
-
+                animator.SetBool("emergeLeft", true);
                 lerpOutProgress = 0;
                 aiming = true;
                 if (lerpInProgress < 1)
@@ -488,7 +528,8 @@ public class Player : MonoBehaviour
             else
             {
                 //agent.isStopped = false;
-
+                animator.SetFloat("Direction", -1);
+                animator.SetBool("emergeLeft", false);
                 lerpInProgress = 0;
                 aiming = false;
                 if (lerpOutProgress < 1)
