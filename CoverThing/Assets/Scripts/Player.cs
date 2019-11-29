@@ -31,6 +31,7 @@ public class Player : MonoBehaviour
     private float coverLerpIn;
     private float coverLerpOut;
     private float coverLerpSpeed = 5;
+    private bool transferringCover;
 
 
     private float peekOutTimer = 1;
@@ -106,15 +107,50 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        if (agent.enabled)
+        {
+            if(Input.GetKey(KeyCode.S))
+            {
+                agent.enabled = false;
+                transferringCover = false;
+            }
+            if (Vector3.Distance(transform.position, agent.destination) < inCoverRange)
+            {
+                if (currentCover.transform.name == "LowCover")
+                {
+                    animator.SetBool("emergeRight", false);
+                    animator.SetBool("emergeLeft", false);
+
+                    animator.SetBool("movingCover", false);
+                    animator.SetBool("running", false);
+                    inLowCover = true;
+                    transferringCover = false;
+                }
+                else if (currentCover.transform.name == "HighCover")
+                {
+                    animator.SetBool("emergeRight", false);
+                    animator.SetBool("emergeLeft", false);
+
+                    animator.SetBool("movingCover", false);
+                    animator.SetBool("running", false);
+                    inHighCover = true;
+                    transferringCover = false;
+                }
+                inCover = true;
+            }
+
+        }
+
         if (!inCover)
         {
             playerControls();
         }
-        if(inLowCover)
+        if(inLowCover && !transferringCover)
         {
             playerLowCoverControls();
         }
-        if(inHighCover)
+        if(inHighCover && !transferringCover)
         {
             playerHighCoverControls();
         }
@@ -191,6 +227,7 @@ public class Player : MonoBehaviour
                     agent.destination = hit.transform.position;
                     animator.speed = agent.speed/7;
                     animator.SetBool("running", true);
+                    transferringCover = true;
                     //head to cover
                 }
             }
@@ -203,11 +240,13 @@ public class Player : MonoBehaviour
                 {
                     animator.SetBool("running", false);
                     inLowCover = true;
+                    transferringCover = false;
                 }
                 else if(currentCover.transform.name == "HighCover")
                 {
                     animator.SetBool("running", false);
                     inHighCover = true;
+                    transferringCover = false;
                 }
                 inCover = true;
             }
@@ -343,6 +382,7 @@ public class Player : MonoBehaviour
                 
                 inLowCover = true;
                 agent.enabled = false;
+                transferringCover = false;
             }
         }
 
@@ -441,6 +481,9 @@ public class Player : MonoBehaviour
                             currentCover = hit.transform.gameObject;
                             agent.enabled = true;
                             agent.destination = hit.transform.position;
+                            animator.SetBool("movingCover", true);
+                            transferringCover = true;
+                            aiming = false;
                             //head to cover
                         }
                     }
@@ -512,6 +555,11 @@ public class Player : MonoBehaviour
                             currentCover = hit.transform.gameObject;
                             agent.enabled = true;
                             agent.destination = hit.transform.position;
+                            animator.SetBool("movingCover", true);
+                            transferringCover = true;
+                            aiming = false;
+                            animator.SetBool("emergeRight", false);
+
                             //head to cover
                         }
                     }
@@ -578,6 +626,12 @@ public class Player : MonoBehaviour
                         currentCover = hit.transform.gameObject;
                         agent.enabled = true;
                         agent.destination = hit.transform.position;
+                        animator.SetBool("movingCover", true);
+
+                        transferringCover = true;
+                        aiming = false;
+                        animator.SetBool("emergeLeft", false);
+
                         //head to cover
                     }
                 }
